@@ -1,10 +1,11 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { MdAutoAwesome, MdStars } from 'react-icons/md'
 import { IoIosClose } from "react-icons/io";
 import { FaUserDoctor } from 'react-icons/fa6';
-import { post_api } from '@/app/api_helper/api_helper';
+import { get_api, post_api } from '@/app/api_helper/api_helper';
 import Swal from 'sweetalert2';
+import Loading from '../../../../Loading';
 
 export default function AddDoctors({ editId }) {
     const formFields = [
@@ -36,7 +37,7 @@ export default function AddDoctors({ editId }) {
         experience_year: 0,
         phone_number: "",
         email: "",
-        profile_image: "",
+        profile_image: null,
         short_description: "",
         full_bio: "",
         other_services: [""],
@@ -103,6 +104,67 @@ export default function AddDoctors({ editId }) {
         setFormData({ ...formData, other_services: updatedServices })
     }
 
+    const blank_state = () => {
+        setFormData({
+            name: "",
+            slug: "",
+            post_name: "",
+            primary_specialization: "",
+            experience_year: 0,
+            phone_number: "",
+            email: "",
+            profile_image: "",
+            short_description: "",
+            full_bio: "",
+            other_services: [""],
+            is_active: true,
+            is_featured: false,
+            meta_title: "",
+            meta_description: '',
+        })
+    }
+
+    const fetchDoctorById = async (editId) => {
+        try {
+            const response = await get_api({
+                params: editId,
+                path: 'doctor/view'
+            })
+            if (response.data.success) {
+                const { name, slug, post_name, experience_year, phone_number, email, profile_image, short_description, full_bio, other_services, is_active, is_featured, meta_title, meta_description, primary_specialization } = response.data.result
+                setFormData({
+                    name,
+                    slug,
+                    post_name,
+                    primary_specialization,
+                    experience_year,
+                    phone_number,
+                    email,
+                    profile_image,
+                    short_description,
+                    full_bio,
+                    other_services,
+                    is_active,
+                    is_featured,
+                    meta_title,
+                    meta_description,
+                })
+            }
+            else {
+                console.log('Cannot found Doctor to edit')
+            }
+        } catch (error) {
+            console.log(error || 'Server Error')
+        }
+    }
+
+    useEffect(() => {
+        if (editId) {
+            fetchDoctorById(editId)
+        }
+    }, [editId])
+
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -118,46 +180,57 @@ export default function AddDoctors({ editId }) {
                 JSON.stringify(formData.other_services)
             );
 
-            const result = await post_api({
-                body: formDataObj,
-                params: null,
-                path: "doctor/add",
-            });
-
-            if (result.success) {
-                await Swal.fire({
-                    title: 'Success!',
-                    text: 'Doctor added successfully!',
-                    icon: 'success',
-                    confirmButtonColor: '#00c4cc',
-                }).then((res) => {
-                    if (res.isConfirmed) {
-                        //blank form data after success
-                        setFormData({
-                            name: "",
-                            slug: "",
-                            post_name: "",
-                            primary_specialization: "",
-                            experience_year: 0,
-                            phone_number: "",
-                            email: "",
-                            profile_image: "",
-                            short_description: "",
-                            full_bio: "",
-                            other_services: [""],
-                            is_active: true,
-                            is_featured: false,
-                            meta_title: "",
-                            meta_description: '',
-                        })
-                    }
-                })
-
-            } else {
-                Swal.fire({
-                    icon: "error",
-                    text: "Failed to add doctor!",
+            if (editId) {
+                const result = await post_api({
+                    body: formDataObj,
+                    params: editId,
+                    path: `doctor/update`
                 });
+                if (result.success) {
+                    await Swal.fire({
+                        title: 'Success!',
+                        text: 'Doctor Updated successfully!',
+                        icon: 'success',
+                        confirmButtonColor: '#00c4cc',
+                    }).then((res) => {
+                        if (res.isConfirmed) {
+                            //blank form data after success
+                            blank_state()
+                        }
+                    })
+
+                } else {
+                    Swal.fire({
+                        icon: "error",
+                        text: "Failed to add doctor!",
+                    });
+                }
+            }
+            else {
+                const result = await post_api({
+                    body: formDataObj,
+                    params: null,
+                    path: "doctor/add",
+                });
+                if (result.success) {
+                    await Swal.fire({
+                        title: 'Success!',
+                        text: 'Doctor added successfully!',
+                        icon: 'success',
+                        confirmButtonColor: '#00c4cc',
+                    }).then((res) => {
+                        if (res.isConfirmed) {
+                            //blank form data after success
+                            blank_state()
+                        }
+                    })
+
+                } else {
+                    Swal.fire({
+                        icon: "error",
+                        text: "Failed to add doctor!",
+                    });
+                }
             }
 
         } catch (error) {
@@ -174,7 +247,7 @@ export default function AddDoctors({ editId }) {
 
     return (
         <>
-            {loading && <Loader />}
+            {loading && <Loading />}
             <div className="w-full bg-[#0D1D2D] min-h-screen p-8 text-white">
                 <div className="max-w-[1320] mx-auto bg-[#13293D] p-8 rounded shadow-lg">
 
@@ -204,6 +277,13 @@ export default function AddDoctors({ editId }) {
                                 ) : (
                                     <div className="flex flex-col gap-1">
                                         <div className="flex items-center gap-3">
+                                            {field.type === "file" && formData.profile_image && typeof formData.profile_image === "string" && (
+                                                <img
+                                                    src={formData.profile_image}
+                                                    alt="Profile Preview"
+                                                    className="w-15 h-15 object-cover rounded-lg border"
+                                                />
+                                            )}
                                             <input
                                                 required={!["checkbox", "file"].includes(field.type)}
                                                 type={field.type}
@@ -212,6 +292,7 @@ export default function AddDoctors({ editId }) {
                                                 onChange={handleChange}
                                                 className={` flex-1 w-full p-3 rounded-md bg-[#0D1D2D] border border-gray-600 focus:border-[#00B0D3] outline-none transition`}
                                             />
+
 
                                             {field.name === 'slug' && (
                                                 <span
@@ -319,21 +400,3 @@ export default function AddDoctors({ editId }) {
     )
 }
 
-
-export function Loader() {
-    return (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50">
-            <div className="bg-white px-8 py-6 rounded-xl shadow-2xl flex flex-col items-center gap-4">
-
-                {/* Spinner */}
-                <div className="w-10 h-10 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
-
-                {/* Text */}
-                <p className="text-lg font-semibold text-gray-700">
-                    Saving Doctor...
-                </p>
-
-            </div>
-        </div>
-    )
-}

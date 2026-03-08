@@ -1,43 +1,92 @@
-import React from "react";
+'use client'
+import React, { useEffect, useState } from "react";
 import { Calendar, Clock, User, Stethoscope, Phone, Mail, CreditCard } from "lucide-react";
+import Loading from "../../../Loading";
+import { get_api, post_api } from "../api_helper/api_helper";
+import { FaDeleteLeft } from "react-icons/fa6";
+import { MdDelete } from "react-icons/md";
+import Swal from "sweetalert2";
 
 export default function Appointments() {
-    const appointments = [
-        {
-            id: 1,
-            patient: "Priya Verma",
-            phone: "9876543210",
-            email: "priya@email.com",
-            doctor: "Dr. Amit Singh",
-            date: "22 Feb 2026",
-            time: "01:00 PM",
-            status: "Pending",
-            paymentMethod: "UPI",
-            paymentProof: "https://via.placeholder.com/60",
-        },
-        {
-            id: 2,
-            patient: "Amit Joshi",
-            phone: "9123456780",
-            email: "amit@email.com",
-            doctor: "Dr. Neha Kapoor",
-            date: "25 Feb 2026",
-            time: "04:15 PM",
-            status: "Completed",
-            paymentMethod: "Card",
-            paymentProof: "https://via.placeholder.com/60",
-        },
-    ];
 
-    const statusStyle = (status) => {
-        if (status === "Pending")
-            return "bg-yellow-500/20 text-yellow-400 border border-yellow-500/40";
-        return "bg-blue-500/20 text-blue-400 border border-blue-500/40";
-    };
+    const [loading, setLoading] = useState(false)
+    const [appointment, setAppointment] = useState([])
+
+    const fetchAppointments = async () => {
+        try {
+            setLoading(true)
+            const response = await get_api({
+                params: null,
+                path: 'appointment/view'
+            })
+            if (response.data.success) {
+                setAppointment(response.data.appointments)
+            }
+        } catch (error) {
+            console.log(error)
+        }
+        finally {
+            setLoading(false)
+        }
+    }
+
+    useEffect(() => {
+        fetchAppointments()
+    }, [])
+
+
+    const deleteAppointment = async (id) => {
+        try {
+
+            const result = await Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel'
+            })
+
+            if (!result.isConfirmed) return
+
+            const response = await post_api({
+                body: {},
+                params: id,
+                path: 'appointment/delete'
+            })
+
+            if (response.data.success) {
+                Swal.fire(
+                    'Deleted!',
+                    'Appointment Deleted Successfully.',
+                    'success'
+                )
+                fetchAppointments()
+            } else {
+                Swal.fire(
+                    'Something went wrong!',
+                    'Failed to delete Appointment!',
+                    'error'
+                )
+            }
+
+        } catch (error) {
+            console.log(error)
+
+            Swal.fire(
+                'Something went wrong!',
+                'Failed to delete doctor!',
+                'error'
+            )
+        }
+    }
 
     return (
         <div className="min-h-screen bg-[#0B1E2D] py-12 px-6">
-            <div className="max-w-[1320] mx-auto">
+            {loading && <Loading />}
+            <div className="w-full">
                 <div className="bg-[#132C3F] rounded shadow-2xl border border-[#1f425d] p-8">
 
                     <h2 className="text-3xl font-bold text-white mb-8">
@@ -46,104 +95,121 @@ export default function Appointments() {
 
                     <div className="overflow-x-auto">
                         <table className="w-full table-auto text-sm">
-
-                            {/* Header */}
                             <thead>
-                                <tr className="text-gray-300 border-b border-[#214761]">
-                                    <th className="py-4 px-6 text-left">Patient</th>
-                                    <th className="py-4 px-6 text-left">Contact</th>
-                                    <th className="py-4 px-6 text-left">Doctor</th>
-                                    <th className="py-4 px-6 text-left">Date</th>
-                                    <th className="py-4 px-6 text-left">Time</th>
-                                    <th className="py-4 px-6 text-left">Payment</th>
-                                    <th className="py-4 px-6 text-left">Proof</th>
-                                    <th className="py-4 px-6 text-left">Status</th>
+                                <tr className="text-white border-b border-[#214761]">
+                                    <th className="py-4 px-4 text-left">Patient Name</th>
+                                    <th className="py-4 px-4 text-left">Contact</th>
+                                    <th className="py-4 px-4 text-center">Doctor Image</th>
+                                    <th className="py-4 px-4 text-left">Doctor Name</th>
+                                    <th className="py-4 px-4 text-left min-w-[120]">Apt Date</th>
+                                    <th className="py-4 px-4 text-left min-w-[100]">Apt Time</th>
+                                    <th className="py-4 px-4 text-left">Payment</th>
+                                    <th className="py-4 px-4 text-center">Proof</th>
+                                    <th className="py-4 px-4 text-center">Action</th>
                                 </tr>
                             </thead>
 
-                            {/* Body */}
                             <tbody>
-                                {appointments.map((appt) => (
-                                    <tr
-                                        key={appt.id}
-                                        className="border-b border-[#1f425d] hover:bg-[#102738] transition"
-                                    >
-                                        {/* Patient */}
-                                        <td className="py-4 px-6 text-white">
-                                            <div className="flex items-center gap-2">
-                                                <User size={16} className="text-teal-400" />
-                                                {appt.patient}
-                                            </div>
-                                        </td>
+                                {
+                                    appointment.length == 0
+                                        ?
+                                        <tr
+                                            className="border-b border-[#1f425d] transition duration-200"
+                                        >
+                                            <td colSpan={9} className="py-10 text-cyan-200 animate-pulse px-4 text-3xl text-center font-bold">
+                                                No Appointments Yet
+                                            </td>
+                                        </tr>
+                                        :
 
-                                        {/* Contact */}
-                                        <td className="py-4 px-6 text-gray-300 space-y-1">
-                                            <div className="flex items-center gap-2">
-                                                <Phone size={14} className="text-teal-400" />
-                                                {appt.phone}
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <Mail size={14} className="text-teal-400" />
-                                                {appt.email}
-                                            </div>
-                                        </td>
-
-                                        {/* Doctor */}
-                                        <td className="py-4 px-6 text-white">
-                                            <div className="flex items-center gap-2">
-                                                <Stethoscope size={16} className="text-teal-400" />
-                                                {appt.doctor}
-                                            </div>
-                                        </td>
-
-                                        {/* Date */}
-                                        <td className="py-4 px-6 text-gray-300">
-                                            <div className="flex items-center gap-2">
-                                                <Calendar size={16} className="text-teal-400" />
-                                                {appt.date}
-                                            </div>
-                                        </td>
-
-                                        {/* Time */}
-                                        <td className="py-4 px-6 text-gray-300">
-                                            <div className="flex items-center gap-2">
-                                                <Clock size={16} className="text-teal-400" />
-                                                {appt.time}
-                                            </div>
-                                        </td>
-
-                                        {/* Payment Method */}
-                                        <td className="py-4 px-6 text-gray-300">
-                                            <div className="flex items-center gap-2">
-                                                <CreditCard size={16} className="text-teal-400" />
-                                                {appt.paymentMethod}
-                                            </div>
-                                        </td>
-
-                                        {/* Payment Proof Image */}
-                                        <td className="py-4 px-6">
-                                            <img
-                                                src={appt.paymentProof}
-                                                alt="Payment Proof"
-                                                className="w-14 h-14 rounded object-cover border border-[#214761]"
-                                            />
-                                        </td>
-
-                                        {/* Status */}
-                                        <td className="py-4 px-6">
-                                            <span
-                                                className={`px-3 py-1 text-xs rounded-full font-medium ${statusStyle(
-                                                    appt.status
-                                                )}`}
+                                        appointment.map((item, index) => (
+                                            <tr
+                                                key={index}
+                                                className="border-b border-[#1f425d] hover:bg-[#102738] transition duration-200"
                                             >
-                                                {appt.status}
-                                            </span>
-                                        </td>
+                                                {/* Patient */}
+                                                <td className="py-5 px-4 capitalize text-white">
+                                                    <div className="flex items-center gap-2">
+                                                        <User size={16} className="text-teal-400" />
+                                                        {item.patient_name}
+                                                    </div>
+                                                </td>
 
-                                    </tr>
-                                ))}
+                                                {/* Contact */}
+                                                <td className="py-5 px-4 text-white space-y-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <Phone size={14} className="text-teal-400" />
+                                                        {item.patient_phone}
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <Mail size={14} className="text-teal-400" />
+                                                        {item.patient_email}
+                                                    </div>
+                                                </td>
+
+                                                {/* Doctor Image */}
+                                                <td className="py-5 px-4 text-center">
+                                                    <img
+                                                        src={item.profile_image}
+                                                        className="w-14 h-14 rounded-md object-cover border border-[#214761] mx-auto"
+                                                    />
+                                                </td>
+
+                                                {/* Doctor Name */}
+                                                <td className="py-5 px-4 text-white">
+                                                    <div className="flex items-center gap-2">
+                                                        <User size={16} className="text-teal-400" />
+                                                        {item.name}
+                                                    </div>
+                                                </td>
+
+                                                {/* Date */}
+                                                <td className="py-5 px-4 text-white">
+                                                    <div className="flex items-center gap-2">
+                                                        <Calendar size={16} className="text-teal-400" />
+                                                        {item.date_only}
+                                                    </div>
+                                                </td>
+
+                                                {/* Time */}
+                                                <td className="py-5 px-4 text-white">
+                                                    <div className="flex items-center gap-2">
+                                                        <Clock size={16} className="text-teal-400" />
+                                                        {item.time_only}
+                                                    </div>
+                                                </td>
+
+                                                {/* Payment */}
+                                                <td className="py-5 px-4 text-green-400 font-semibold uppercase">
+                                                    {item.payment_method}
+                                                </td>
+
+                                                {/* Proof */}
+                                                <td className="py-5 px-4 text-center">
+                                                    {item.payment_proof_image ? (
+                                                        <img
+                                                            src={item.payment_proof_image}
+                                                            className="w-14 h-14 rounded object-cover border border-[#214761] mx-auto"
+                                                        />
+                                                    ) : (
+                                                        <span className="text-gray-400 text-sm">
+                                                            Not Added
+                                                        </span>
+                                                    )}
+                                                </td>
+
+                                                {/* Action */}
+                                                <td className="py-5 px-4 text-center">
+                                                    <button onClick={() => deleteAppointment(item.id)} className="text-xl cursor-pointer text-white hover:text-red-500 duration-200">
+                                                        <MdDelete />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+
+
+                                }
                             </tbody>
-
                         </table>
                     </div>
 

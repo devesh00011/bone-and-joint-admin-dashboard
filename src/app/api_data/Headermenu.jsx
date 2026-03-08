@@ -4,7 +4,7 @@ import { MdHomeRepairService } from "react-icons/md";
 
 export const HeaderData = [
     {
-        title: 'home',
+        title: 'dashboard',
         slug: '/dashboard',
         icon: <FaHome />
     },
