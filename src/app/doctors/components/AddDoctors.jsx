@@ -186,7 +186,7 @@ export default function AddDoctors({ editId }) {
                     params: editId,
                     path: `doctor/update`
                 });
-                if (result.success) {
+                if (result.data.success) {
                     await Swal.fire({
                         title: 'Success!',
                         text: 'Doctor Updated successfully!',
@@ -212,7 +212,7 @@ export default function AddDoctors({ editId }) {
                     params: null,
                     path: "doctor/add",
                 });
-                if (result.success) {
+                if (result.data.success) {
                     await Swal.fire({
                         title: 'Success!',
                         text: 'Doctor added successfully!',

@@ -6,6 +6,7 @@ import { get_api, post_api } from "../api_helper/api_helper";
 import { FaDeleteLeft } from "react-icons/fa6";
 import { MdDelete } from "react-icons/md";
 import Swal from "sweetalert2";
+import { RiRefreshLine } from "react-icons/ri";
 
 export default function Appointments() {
 
@@ -89,9 +90,12 @@ export default function Appointments() {
             <div className="w-full">
                 <div className="bg-[#132C3F] rounded shadow-2xl border border-[#1f425d] p-8">
 
-                    <h2 className="text-3xl font-bold text-white mb-8">
-                        All Appointments
-                    </h2>
+                    <div className="flex items-center justify-between text-white">
+                        <h2 className="text-3xl  font-bold text-white mb-8">
+                            All Appointments
+                        </h2>
+                        <span onClick={() => fetchAppointments()} className="flex items-center gap-1 cursor-pointer hover:text-cyan-500 duration-100"><RiRefreshLine /> Refresh </span>
+                    </div>
 
                     <div className="overflow-x-auto">
                         <table className="w-full table-auto text-sm">

@@ -5,6 +5,7 @@ import { FaUserDoctor } from 'react-icons/fa6'
 import { FaEdit } from 'react-icons/fa'
 import { MdDelete } from 'react-icons/md'
 import Swal from 'sweetalert2'
+import { RiRefreshLine } from 'react-icons/ri'
 
 export default function ViewServices({ editId, setEditId, setActiveTab }) {
 
@@ -20,7 +21,7 @@ export default function ViewServices({ editId, setEditId, setActiveTab }) {
       })
       console.log(res)
       if (res.data.success) {
-        setServices(res.data.services)
+        setServices(res.data.response)
       }
       else {
         setServices([])
@@ -107,9 +108,12 @@ export default function ViewServices({ editId, setEditId, setActiveTab }) {
       <div className="w-full bg-[#0D1D2D] min-h-screen p-8 text-white">
         <div className="max-w-[1320] mx-auto bg-[#13293D] p-8 rounded shadow-lg">
 
-          <h2 className="text-3xl flex items-center gap-3 font-bold mb-6">
-            View Services
-          </h2>
+          <div className="flex items-center justify-between text-white">
+            <h2 className="text-3xl  font-bold text-white mb-8">
+              All Services
+            </h2>
+            <span onClick={() => fetchAllServices()} className="flex items-center gap-1 cursor-pointer hover:text-cyan-500 duration-100"><RiRefreshLine /> Refresh </span>
+          </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -126,8 +130,8 @@ export default function ViewServices({ editId, setEditId, setActiveTab }) {
               </thead>
 
               <tbody>
-                {services.length > 0 ? (
-                  services.map((item, index) => (
+                {services?.length > 0 ? (
+                  services?.map((item, index) => (
                     <tr
                       key={index}
                       className="border-b border-gray-700 hover:bg-[#1B3A57] transition"

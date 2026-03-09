@@ -8,6 +8,7 @@ import { FaUserDoctor } from 'react-icons/fa6'
 import { MdDelete } from 'react-icons/md'
 import Swal from 'sweetalert2'
 import Loading from '../../../../Loading'
+import { RiRefreshLine } from 'react-icons/ri'
 
 export default function ViewDoctors({ setActiveTab, setEditId }) {
 
@@ -99,9 +100,12 @@ export default function ViewDoctors({ setActiveTab, setEditId }) {
             <div className="w-full bg-[#0D1D2D] min-h-screen p-8 text-white">
                 <div className="max-w-[1320] mx-auto bg-[#13293D] p-8 rounded shadow-lg">
 
-                    <h2 className="text-3xl flex items-center gap-3 font-bold mb-6">
-                        View Doctors
-                    </h2>
+                    <div className="flex items-center justify-between text-white">
+                        <h2 className="text-3xl  font-bold text-white mb-8">
+                            All Doctors
+                        </h2>
+                        <span onClick={() => fetchDoctors()} className="flex items-center gap-1 cursor-pointer hover:text-cyan-500 duration-100"><RiRefreshLine /> Refresh </span>
+                    </div>
 
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
@@ -120,8 +124,8 @@ export default function ViewDoctors({ setActiveTab, setEditId }) {
                             </thead>
 
                             <tbody>
-                                {doctors.length > 0 ? (
-                                    doctors.map((doc, index) => (
+                                {doctors?.length > 0 ? (
+                                    doctors?.map((doc, index) => (
                                         <tr
                                             key={index}
                                             className="border-b border-gray-700 hover:bg-[#1B3A57] transition"
