@@ -23,5 +23,4 @@ export const HeaderData = [
         slug: '/appointments',
         icon: <FaClock />
     },
-
 ]
