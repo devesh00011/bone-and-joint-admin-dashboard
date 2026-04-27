@@ -142,7 +142,7 @@ export default function Appointments() {
                                     appointment.length == 0
                                         ?
                                         <tr
-                                            className="border-b border-[#1f425d] transition duration-200"
+                                            className="border-b border-[#1f425d]  transition duration-200"
                                         >
                                             <td colSpan={9} className="py-10 text-cyan-200 animate-pulse px-4 text-3xl text-center font-bold">
                                                 No Appointments Yet
@@ -153,7 +153,7 @@ export default function Appointments() {
                                         appointment.map((item, index) => (
                                             <tr
                                                 key={index}
-                                                className="border-b border-[#1f425d] hover:bg-[#102738] transition duration-200"
+                                                className="border-b border-[#1f425d] hover:bg-[#003e4b] transition duration-200"
                                             >
                                                 {/* Patient */}
                                                 <td className="py-5 px-4 capitalize text-white">

@@ -28,11 +28,11 @@ export default function Form() {
         e.preventDefault()
         setLoading(true)
 
-
         const userDataObj = {
             admin_email: adminEmail,
             admin_password: adminPassword
         }
+
         try {
             const response = await post_api({
                 body: userDataObj,

@@ -27,6 +27,8 @@ export default function Header() {
         { name: 'doctors', link: 'doctors' },
         { name: 'services', link: 'services' },
         { name: 'appointments', link: 'appointments' },
+        { name: 'enquiries', link: 'enquiries' },
+        
     ]
 
     const dispatch = useDispatch()

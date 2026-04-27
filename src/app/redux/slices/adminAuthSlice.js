@@ -1,7 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import Cookies from "js-cookie";
 
-const tokenFromCookie = Cookies.get("adminToken") || null;
+const tokenFromCookie = Cookies.get("adminToken123456789important-jpgkdienddjkdnfh") || null;
 
 const initialState = {
     token: tokenFromCookie,
@@ -19,7 +19,7 @@ const adminAuthSlice = createSlice({
             state.isLoggedIn = true
 
             // cookie set
-            Cookies.set("adminToken", action.payload, { expires: 1 })
+            Cookies.set("adminToken123456789important-jpgkdienddjkdnfh", action.payload, { expires: 1 })
         },
 
         adminLogout: (state) => {
@@ -28,7 +28,7 @@ const adminAuthSlice = createSlice({
             state.isLoggedIn = false
 
             // cookie remove
-            Cookies.remove("adminToken")
+            Cookies.remove("adminToken123456789important-jpgkdienddjkdnfh")
         }
 
     }

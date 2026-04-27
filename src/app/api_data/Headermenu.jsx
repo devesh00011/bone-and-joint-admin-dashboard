@@ -1,6 +1,6 @@
-import { FaCalendar, FaClock, FaHome } from "react-icons/fa";
+import { FaCalendar, FaClock, FaHome, FaMicroblog } from "react-icons/fa";
 import { FaUserDoctor } from "react-icons/fa6";
-import { MdHomeRepairService } from "react-icons/md";
+import { MdContactEmergency, MdHomeRepairService } from "react-icons/md";
 
 export const HeaderData = [
     {
@@ -19,8 +19,18 @@ export const HeaderData = [
         icon: <MdHomeRepairService />
     },
     {
+        title: 'blogs',
+        slug: '/blogs',
+        icon: <FaMicroblog />
+    },
+    {
         title: 'appointments',
         slug: '/appointments',
         icon: <FaClock />
+    },
+    {
+        title: 'enquiries',
+        slug: '/enquiries',
+        icon: <MdContactEmergency />
     },
 ]

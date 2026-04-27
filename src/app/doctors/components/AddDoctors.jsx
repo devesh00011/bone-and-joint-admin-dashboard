@@ -113,7 +113,6 @@ export default function AddDoctors({ editId }) {
             experience_year: 0,
             phone_number: "",
             email: "",
-            profile_image: "",
             short_description: "",
             full_bio: "",
             other_services: [""],

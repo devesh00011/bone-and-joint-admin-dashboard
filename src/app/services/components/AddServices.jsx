@@ -86,9 +86,9 @@ export default function AddServices({ editId, setEditId, setActiveTab }) {
             meta_description: "",
         })
 
-         if (fileInputRef.current) {
-        fileInputRef.current.value = ""
-    }
+        if (fileInputRef.current) {
+            fileInputRef.current.value = ""
+        }
 
         setEditId(null)
         setPreviewImg('/preview.png')
@@ -307,7 +307,7 @@ export default function AddServices({ editId, setEditId, setActiveTab }) {
                                         <div className="">
                                             {field.type === "file" && previewImg && (
                                                 <img
-                                                ref={fileInputRef}
+                                                    ref={fileInputRef}
                                                     src={previewImg}
                                                     alt="Preview"
                                                     className="max-w-[700] max-h-[200] mb-5 object-cover rounded-lg border"
