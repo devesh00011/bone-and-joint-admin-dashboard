@@ -5,7 +5,8 @@ import Swal from 'sweetalert2'
 import { get_api, post_api } from '@/app/api_helper/api_helper'
 import { MdAutoAwesome } from 'react-icons/md'
 
-export default function AddBlogs({ editId }) {
+export default function AddBlogs({ editId, setEditId }) {
+
     const [loading, setLoading] = useState(false)
     const [categoryLoading, setCategoryLoading] = useState(false)
 
@@ -33,7 +34,8 @@ export default function AddBlogs({ editId }) {
         blog_read_time: "",
         is_active: true,
         meta_title: "",
-        meta_description: ""
+        meta_description: "",
+        blog_category_id: ""
     })
 
     const handleChange = (e) => {
@@ -60,19 +62,54 @@ export default function AddBlogs({ editId }) {
     };
 
     const blankState = () => {
-        alert('blank state')
+        setFormData({
+            blog_title: "",
+            blog_slug: "",
+            blog_image: null,
+            blog_full_description: "",
+            blog_author_name: "",
+            blog_read_time: "",
+            is_active: true,
+            meta_title: "",
+            meta_description: ""
+        })
+        setEditId()
     }
 
     const saveBlog = async (e) => {
         e.preventDefault()
-        setLoading(true)
+
         try {
+            setLoading(true)
             const formDataObj = new FormData(e.target);
 
             formDataObj.set("is_active", formData.is_active.toString());
 
             if (editId) {
                 //update logic
+                const response = await post_api({
+                    body: formDataObj,
+                    params: editId,
+                    path: 'blog/update-blog'
+                })
+                if (response.status == 200) {
+                    Swal.fire({
+                        title: 'Blog Updated Successfully',
+                        text: 'Success ',
+                        icon: 'success'
+                    }).then((res) => {
+                        if (res.isConfirmed) {
+                            blankState()
+                        }
+                    })
+                }
+                else {
+                    Swal.fire({
+                        title: 'Cannot Update Blog',
+                        text: 'Try Again Later ',
+                        icon: 'error'
+                    })
+                }
             }
             else {
                 const response = await post_api({
@@ -82,8 +119,8 @@ export default function AddBlogs({ editId }) {
                 })
                 if (response.status == 200) {
                     Swal.fire({
-                        title: 'Success',
-                        text: 'Blog Added Successfully ',
+                        title: 'Blog Added Successfully ',
+                        text: 'Success',
                         icon: 'success'
                     }).then((res) => {
                         if (res.isConfirmed) {
@@ -98,6 +135,13 @@ export default function AddBlogs({ editId }) {
                     title: 'Cannot Add Blogs',
                     text: 'Try Again Later',
                     icon: 'error'
+                })
+            }
+            if (error.response.status == 409) {
+                Swal.fire({
+                    title: 'Slug Already Added Before',
+                    text: 'Try Different One',
+                    icon: 'warning'
                 })
             }
         }
@@ -190,6 +234,45 @@ export default function AddBlogs({ editId }) {
         fetchAllCategories()
     }, [])
 
+
+    const fetchBlogs = async () => {
+        try {
+            setLoading(true)
+
+            const response = await get_api({
+                params: editId,
+                path: `blog/view-blog`
+            })
+
+            if (response.status == 200) {
+                let b = response.data.result
+                setFormData({
+                    blog_title: b.blog_title,
+                    blog_slug: b.blog_slug,
+                    blog_image: b.blog_image,
+                    blog_full_description: b.blog_full_description,
+                    blog_author_name: b.blog_author_name,
+                    blog_read_time: b.blog_read_time,
+                    is_active: true,
+                    meta_title: b.meta_title,
+                    meta_description: b.meta_description,
+                    blog_category_id: b.blog_category_id
+                })
+            }
+
+        } catch (error) {
+            console.log(error)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    useEffect(() => {
+        if (editId) {
+            fetchBlogs()
+        }
+    }, [editId])
+
     console.log(blogCategory)
 
     return (
@@ -208,16 +291,17 @@ export default function AddBlogs({ editId }) {
                 </div>
                 <div className="max-w-[1320] mx-auto mt-10 bg-[#13293D] p-8 rounded-lg shadow-lg">
                     <div>
-                        <div className='text-3xl font-bold mb-4'>Add Blogs
+                        <div className='text-3xl font-bold mb-4'>{editId ? 'Update Blog' : 'Add Blog'}
                             <div className='w-24 h-1 rounded-full bg-[#00B0D3] mt-1.5'></div>
                         </div>
                         <form onSubmit={saveBlog} className='gap-3'>
                             <p className='mb-1 font-semibold'>Select Category</p>
                             <div className='grid grid-cols-2 gap-5'>
                                 <select
-                                    value={formData.category_id || ""}
+                                    name="blog_category_id"
+                                    value={formData.blog_category_id || ""}
                                     onChange={(e) =>
-                                        setFormData({ ...formData, category_id: e.target.value })
+                                        setFormData({ ...formData, blog_category_id: e.target.value })
                                     }
                                     disabled={categoryLoading}
                                     className='px-5 py-3 w-full cursor-pointer rounded-lg bg-[#0D1D2D] border border-gray-600'
@@ -248,6 +332,7 @@ export default function AddBlogs({ editId }) {
 
                                         {field.type === "textarea" ? (
                                             <textarea
+                                                required
                                                 name={field.name}
                                                 value={formData[field.name]}
                                                 onChange={handleChange}
@@ -265,6 +350,15 @@ export default function AddBlogs({ editId }) {
                                         ) : (
                                             <div className="flex items-center gap-2">
 
+                                                {
+                                                    field.name === "blog_image" && formData.blog_image && typeof formData.blog_image === "string" && (
+                                                        <img
+                                                            src={formData.blog_image}
+                                                            className="w-40 h-40 object-cover rounded"
+                                                        />
+                                                    )
+                                                }
+
                                                 <input
                                                     type={field.type}
                                                     name={field.name}
@@ -272,6 +366,8 @@ export default function AddBlogs({ editId }) {
                                                     onChange={handleChange}
                                                     className="w-full p-3 rounded-md bg-[#0D1D2D] border border-gray-600"
                                                 />
+
+
 
                                                 {/* Slug Auto Button */}
                                                 {field.name === "blog_slug" && (
@@ -287,12 +383,10 @@ export default function AddBlogs({ editId }) {
                                             </div>
                                         )}
                                     </div>
-
                                 ))}
 
                             </div>
-                            <button className="my-5 bg-[#00B0D3] font-semibold hover:brightness-75 duration-300 cursor-pointer px-5 py-3 rounded-md" type='submit'>Add Blog</button>
-
+                            <button className="my-5 bg-[#00B0D3] font-semibold hover:brightness-75 duration-300 cursor-pointer px-5 py-3 rounded-md" type='submit'>{editId ? 'Update Blog' : 'Add Blog'}</button>
                         </form>
                     </div>
                 </div>
