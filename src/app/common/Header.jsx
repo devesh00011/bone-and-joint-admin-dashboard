@@ -24,11 +24,13 @@ export default function Header() {
     }, [token, path])
 
     const menuData = [
+        { name: 'dashboard', link: 'dashboard' },
         { name: 'doctors', link: 'doctors' },
         { name: 'services', link: 'services' },
+        { name: 'blogs', link: 'blogs' },
         { name: 'appointments', link: 'appointments' },
         { name: 'enquiries', link: 'enquiries' },
-        
+
     ]
 
     const dispatch = useDispatch()
