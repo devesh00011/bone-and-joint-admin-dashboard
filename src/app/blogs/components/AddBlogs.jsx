@@ -5,13 +5,14 @@ import Swal from 'sweetalert2'
 import { get_api, post_api } from '@/app/api_helper/api_helper'
 import { MdAutoAwesome } from 'react-icons/md'
 
-export default function AddBlogs({ editId, setEditId }) {
+export default function AddBlogs({ editId, setEditId, categoryEditId, setCategoryEditId }) {
 
     const [loading, setLoading] = useState(false)
     const [categoryLoading, setCategoryLoading] = useState(false)
 
     const [blogCategory, setBlogCategory] = useState('')
     const [allCategories, setAllCategories] = useState([])
+
 
     const formFields = [
         { name: "blog_title", label: "Blog Title", type: "text" },
@@ -85,6 +86,10 @@ export default function AddBlogs({ editId, setEditId }) {
 
             formDataObj.set("is_active", formData.is_active.toString());
 
+            if (!formData.blog_category_id) {
+                formDataObj.delete("blog_category_id"); // ✅ remove field
+            }
+
             if (editId) {
                 //update logic
                 const response = await post_api({
@@ -130,6 +135,13 @@ export default function AddBlogs({ editId, setEditId }) {
                 }
             }
         } catch (error) {
+            if (error.response.status == 409) {
+                Swal.fire({
+                    title: 'Blog Image Is Required',
+                    text: 'Add One Image to Continue',
+                    icon: 'warning'
+                })
+            }
             if (error.response.status == 500) {
                 Swal.fire({
                     title: 'Cannot Add Blogs',
@@ -137,7 +149,7 @@ export default function AddBlogs({ editId, setEditId }) {
                     icon: 'error'
                 })
             }
-            if (error.response.status == 409) {
+            if (error.response.status == '23505') {
                 Swal.fire({
                     title: 'Slug Already Added Before',
                     text: 'Try Different One',
@@ -154,22 +166,44 @@ export default function AddBlogs({ editId, setEditId }) {
         e.preventDefault()
         try {
             setLoading(true)
-            const response = await post_api({
-                body: { blogCategory },
-                params: null,
-                path: 'blog/add-category'
-            })
-            console.log(response)
-            if (response.status == 200) {
-                Swal.fire({
-                    title: 'Success',
-                    text: ' Blog Category Added Successfully',
-                    icon: 'success'
-                }).then((res) => {
-                    if (res.isConfirmed) {
-                        setBlogCategory('')
-                    }
+            if (categoryEditId) {
+                //update category 
+                const response = await post_api({
+                    body: { blogCategory },
+                    params: categoryEditId,
+                    path: 'blog/update-category'
                 })
+                if (response.status == 200) {
+                    Swal.fire({
+                        title: 'Success',
+                        text: ' Blog Category Updated Successfully',
+                        icon: 'success'
+                    }).then((res) => {
+                        if (res.isConfirmed) {
+                            setBlogCategory('')
+                            setCategoryEditId(null)
+
+                        }
+                    })
+                }
+            }
+            else {
+                const response = await post_api({
+                    body: { blogCategory },
+                    params: null,
+                    path: 'blog/add-category'
+                })
+                if (response.status == 200) {
+                    Swal.fire({
+                        title: 'Success',
+                        text: ' Blog Category Added Successfully',
+                        icon: 'success'
+                    }).then((res) => {
+                        if (res.isConfirmed) {
+                            setBlogCategory('')
+                        }
+                    })
+                }
             }
         } catch (error) {
             if (error.response?.status === 409) {
@@ -230,11 +264,6 @@ export default function AddBlogs({ editId, setEditId }) {
         }
     }
 
-    useEffect(() => {
-        fetchAllCategories()
-    }, [])
-
-
     const fetchBlogs = async () => {
         try {
             setLoading(true)
@@ -267,13 +296,36 @@ export default function AddBlogs({ editId, setEditId }) {
         }
     }
 
+    const fetchCategoryById = async () => {
+        try {
+            const response = await get_api({
+                params: categoryEditId,
+                path: 'blog/view-category'
+            })
+            if (response.status == 200) {
+                console.log('edit response', response.data.category.category_name)
+                setBlogCategory(response.data.category.category_name)
+            }
+        } catch (error) {
+            console.log(error.message)
+        }
+    }
+
     useEffect(() => {
         if (editId) {
             fetchBlogs()
         }
     }, [editId])
 
-    console.log(blogCategory)
+    useEffect(() => {
+        fetchAllCategories()
+    }, [])
+
+    useEffect(() => {
+        if (categoryEditId) {
+            fetchCategoryById()
+        }
+    }, [categoryEditId])
 
     return (
         <>
@@ -282,10 +334,10 @@ export default function AddBlogs({ editId, setEditId }) {
             <div className="w-full bg-[#0D1D2D] min-h-screen p-8 text-white">
                 <div className="max-w-[1320] mx-auto bg-[#085160] p-8 rounded-lg shadow-lg">
                     <div>
-                        <p className='text-3xl font-bold mb-2 text-white'>Add Category</p>
+                        <p className='text-3xl font-bold mb-2 text-white'>{categoryEditId ? 'Update Category' : 'Add Category'}</p>
                         <form onSubmit={saveCategory} className='flex items-center gap-5'>
                             <input value={blogCategory} required onChange={(e) => setBlogCategory(e.target.value)} className='px-5 py-3 w-[500] rounded-lg bg-[#0D1D2D] border border-gray-600 focus:border-[#00B0D3] outline-none transition' type='text' />
-                            <button type='submit' className='block bg-[#00B0D3] hover:bg-[#00262e] duration-300 text-white rounded-lg cursor-pointer px-10 py-3 my-5 '>Save</button>
+                            <button type='submit' className='block bg-[#00B0D3] hover:bg-[#00262e] duration-300 text-white rounded-lg cursor-pointer px-7 py-3 my-5 '>{categoryEditId ? 'Update Category' : 'Add Category'}</button>
                         </form>
                     </div>
                 </div>
@@ -301,24 +353,26 @@ export default function AddBlogs({ editId, setEditId }) {
                                     name="blog_category_id"
                                     value={formData.blog_category_id || ""}
                                     onChange={(e) =>
-                                        setFormData({ ...formData, blog_category_id: e.target.value })
+                                        setFormData({
+                                            ...formData,
+                                            blog_category_id: e.target.value || ""
+                                        })
                                     }
                                     disabled={categoryLoading}
                                     className='px-5 py-3 w-full cursor-pointer rounded-lg bg-[#0D1D2D] border border-gray-600'
                                 >
+                                    <option value="">Select Category</option>
+
                                     {categoryLoading ? (
-                                        <option>Loading...</option>
+                                        <option disabled>Loading...</option>
                                     ) : allCategories.length === 0 ? (
-                                        <option>No Categories Found</option>
+                                        <option value="" disabled>No Categories Found</option>
                                     ) : (
-                                        <>
-                                            <option value="">Select Category</option>
-                                            {allCategories.map((item) => (
-                                                <option key={item.id} value={item.id}>
-                                                    {item.category_name}
-                                                </option>
-                                            ))}
-                                        </>
+                                        allCategories.map((item) => (
+                                            <option key={item.id} value={item.id}>
+                                                {item.category_name}
+                                            </option>
+                                        ))
                                     )}
                                 </select>
                             </div>
@@ -356,8 +410,12 @@ export default function AddBlogs({ editId, setEditId }) {
                                                             src={formData.blog_image}
                                                             className="w-40 h-40 object-cover rounded"
                                                         />
+
                                                     )
                                                 }
+
+                                                {field.name === 'blog_image' && field.type == 'file' && <p className='text-sm text-red-400'>Must Add Image For Create Blog</p>}
+
 
                                                 <input
                                                     type={field.type}
@@ -386,7 +444,7 @@ export default function AddBlogs({ editId, setEditId }) {
                                 ))}
 
                             </div>
-                            <button className="my-5 bg-[#00B0D3] font-semibold hover:brightness-75 duration-300 cursor-pointer px-5 py-3 rounded-md" type='submit'>{editId ? 'Update Blog' : 'Add Blog'}</button>
+                            <button className="w-[200] hover:w-[400] my-10 transition-all  text-lg bg-[#00B0D3] py-3 rounded-md font-semibold hover:bg-cyan-800 rounded-r-full cursor-pointer duration-300" type='submit'>{editId ? 'Update Blog' : 'Add Blog'}</button>
                         </form>
                     </div>
                 </div>

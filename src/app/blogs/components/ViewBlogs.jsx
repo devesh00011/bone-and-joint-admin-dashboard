@@ -1,8 +1,9 @@
-import { get_api } from '@/app/api_helper/api_helper'
+import { get_api, post_api } from '@/app/api_helper/api_helper'
 import React, { useEffect, useState } from 'react'
 import { RiRefreshLine } from 'react-icons/ri'
 import Loading from '../../../../Loading'
 import Image from 'next/image'
+import Swal from 'sweetalert2'
 
 export default function ViewBlogs({ setActiveTab, setEditId }) {
 
@@ -14,10 +15,10 @@ export default function ViewBlogs({ setActiveTab, setEditId }) {
             setLoading(true)
             const response = await get_api({
                 params: null,
-                path: 'blog/view-blog'
+                path: 'blog/view-blog-all'
             })
             if (response.status == 200) {
-                console.log(response)
+                console.log(response.data.blogs)
                 setBlogsData(response.data.blogs)
             }
             else {
@@ -55,11 +56,11 @@ export default function ViewBlogs({ setActiveTab, setEditId }) {
                             <Loading />
                             :
                             blogsData.length == 0 ?
-                                <div className='text-2xl font-bold max-w-10 mx-auto'>No Blogs Found</div>
+                                <div className='text-2xl font-bold animate-pulse  text-white'>No Blogs Found</div>
                                 :
                                 blogsData.map((item, index) => {
                                     return (
-                                        <BlogCard setEditId={setEditId} setActiveTab={setActiveTab} item={item} index={index} />
+                                        <BlogCard fetchBlogs={fetchBlogs} setEditId={setEditId} setActiveTab={setActiveTab} item={item} index={index} />
                                     )
                                 })
                     }
@@ -70,13 +71,74 @@ export default function ViewBlogs({ setActiveTab, setEditId }) {
 }
 
 
-function BlogCard({ item, index, setActiveTab, setEditId }) {
-    // console.log(item)
+function BlogCard({ item, index, setActiveTab, setEditId, fetchBlogs }) {
+
+    const [loading, setLoading] = useState(false)
+    const handleDelete = async (id) => {
+        const result = await Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#00B4D8',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        })
+
+        if (result.isConfirmed) {
+            try {
+                setLoading(true)
+
+                const response = await post_api({
+                    body: {},
+                    params: id,
+                    path: 'blog/delete'
+                })
+
+
+                if (response.status === 200) {
+                    Swal.fire({
+                        title: 'Deleted!',
+                        text: 'Blog has been deleted successfully.',
+                        icon: 'success'
+                    })
+                    fetchBlogs()
+                }
+
+            } catch (error) {
+                console.log(error)
+                if (error.response.status == 404) {
+                    Swal.fire({
+                        title: 'Cannot Found Blog to Delete',
+                        text: 'Error',
+                        icon: 'warning'
+                    })
+                }
+                else {
+                    Swal.fire({
+                        title: 'Something Went Wrong',
+                        text: 'Try again later',
+                        icon: 'error'
+                    })
+                }
+            }
+            finally {
+                setLoading(false)
+            }
+        }
+
+
+
+    }
+
     return (
         <div
             key={index}
-            className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition duration-300 flex flex-col justify-between"
+            className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition duration-300 flex flex-col justify-between relative"
         >
+
+            <button className='bg-purple-700 text-white absolute top-5 left-5 rounded-full py-1 px-5 '>{item.is_active ? 'Active' : 'Deactive'}</button>
 
             {/* Image + Sections */}
             <div className="grid grid-cols-2 gap-2">
@@ -93,7 +155,7 @@ function BlogCard({ item, index, setActiveTab, setEditId }) {
                     {item.sections && item.sections.length > 0 ? (
                         <>
 
-                            <h2 className='text-lg font-bold capitalize px-3 py-2 rounded my-2 bg-[#00B0D3] text-white'>all sections with images</h2>
+                            <h2 className='text-lg font-bold capitalize px-3 py-2 rounded my-2 bg-purple-800 text-white'>all sections with images</h2>
                             {item.sections.slice(0, 3).map((sec, secIndex) => (
                                 <div
                                     key={secIndex}
@@ -150,12 +212,13 @@ function BlogCard({ item, index, setActiveTab, setEditId }) {
                     {item.blog_full_description}
                 </p>
 
-                <div className="grid grid-cols-2 items-center mt-2">
-                    <span className="text-sm text-gray-500">
+                <div className="grid grid-cols-3 justify-between items-center mt-2">
+                    <span className="text-sm py-1 border-2 rounded-full text-center text-gray-500">
                         ⏱ {item.blog_read_time} min read
                     </span>
 
-                    <span className="text-white text-center text-xs font-semibold rounded bg-[#00B0D3] px-4 py-2.5">
+                    <span>{''}</span>
+                    <span className="text-white text-center text-md font-semibold rounded-full bg-[#00B0D3] py-1.5">
                         By {item.blog_author_name}
                     </span>
                 </div>
@@ -169,14 +232,14 @@ function BlogCard({ item, index, setActiveTab, setEditId }) {
                         setActiveTab('add')
                         setEditId(item.id)
                     }}
-                    className="flex-1 bg-yellow-700 hover:bg-yellow-800 cursor-pointer text-white text-sm font-semibold py-2 rounded-md"
+                    className="flex-1 bg-yellow-700 hover:bg-yellow-800 cursor-pointer text-white text-sm font-semibold py-2 rounded-full"
                 >
                     Edit
                 </button>
 
                 <button
                     onClick={() => handleDelete(item.id)}
-                    className="flex-1 bg-red-700 hover:bg-red-800 cursor-pointer text-white text-sm font-semibold py-2 rounded-md"
+                    className="flex-1 bg-red-700 hover:bg-red-800 cursor-pointer text-white text-sm font-semibold py-2 rounded-full"
                 >
                     Delete
                 </button>
@@ -186,12 +249,13 @@ function BlogCard({ item, index, setActiveTab, setEditId }) {
                         setActiveTab('add-section')
                         setEditId(item.id)
                     }}
-                    className="flex-1 bg-green-700 hover:bg-green-800 cursor-pointer text-white text-sm font-semibold py-2 rounded-md"
+                    className="flex-1 bg-green-700 hover:bg-green-800 cursor-pointer text-white text-sm font-semibold py-2 rounded-full"
                 >
                     Edit Section
                 </button>
             </div>
         </div>
     )
+
 
 }

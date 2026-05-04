@@ -3,8 +3,9 @@ import { get_api, post_api } from '@/app/api_helper/api_helper'
 import React, { useEffect, useState } from 'react'
 import Swal from 'sweetalert2'
 import Loading from '../../../../Loading'
+import { redirect } from 'next/navigation'
 
-export default function AddSectionOfBlog({ editId }) {
+export default function AddSectionOfBlog({ editId, setActiveTab }) {
 
 
 
@@ -165,7 +166,12 @@ export default function AddSectionOfBlog({ editId }) {
                         ? 'Blog Section Updated Successfully!'
                         : 'Blog Section Added Successfully!',
                     icon: 'success'
+                }).then((res) => {
+                    if (res.isConfirmed) {
+                        setActiveTab('view')
+                    }
                 })
+
             } else {
                 Swal.fire({
                     title: 'Error',
