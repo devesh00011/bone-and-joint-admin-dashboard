@@ -233,6 +233,15 @@ export default function AddSectionOfBlog({ editId, setActiveTab }) {
         }
     }, [editId])
 
+    const removeSubItem = (secIndex, subIndex) => {
+        const updated = [...sections]
+
+        if (updated[secIndex].subItems.length > 1) {
+            updated[secIndex].subItems.splice(subIndex, 1)
+            setSections(updated)
+        }
+    }
+
     return (
         <div className="w-full bg-[#0D1D2D] min-h-screen p-8 text-white">
             {loading && <Loading />}
@@ -313,16 +322,29 @@ export default function AddSectionOfBlog({ editId, setActiveTab }) {
                             {section.subItems.map((sub, subIndex) => (
                                 <div key={subIndex} className="mb-3 border-b pb-3">
 
-                                    <input
-                                        type="text"
-                                        placeholder="Sub Heading"
-                                        value={sub.section_sub_heading}
-                                        onChange={(e) =>
-                                            handleSubChange(index, subIndex, 'section_sub_heading', e.target.value)
-                                        }
-                                        className="w-full p-2 mb-2 bg-[#13293D] border border-gray-600 rounded"
-                                    />
+                                    {/* Sub heading + remove button */}
+                                    <div className="flex gap-3 items-center mb-2">
+                                        <input
+                                            type="text"
+                                            placeholder="Sub Heading"
+                                            value={sub.section_sub_heading}
+                                            onChange={(e) =>
+                                                handleSubChange(index, subIndex, 'section_sub_heading', e.target.value)
+                                            }
+                                            className="w-full p-2 bg-[#13293D] border border-gray-600 rounded"
+                                        />
 
+                                        <button
+                                            type="button"
+                                            disabled={section.subItems.length === 1}
+                                            onClick={() => removeSubItem(index, subIndex)}
+                                            className="bg-red-400 text-black cursor-pointer hover:bg-red-600 hover:text-white duration-100 px-3 py-2 rounded text-sm disabled:opacity-50"
+                                        >
+                                            Remove
+                                        </button>
+                                    </div>
+
+                                    {/* Points */}
                                     {sub.section_sub_points.map((point, pIndex) => (
                                         <div key={pIndex} className="flex gap-3 items-center mb-2">
 
@@ -345,6 +367,7 @@ export default function AddSectionOfBlog({ editId, setActiveTab }) {
                                             </button>
                                         </div>
                                     ))}
+
                                     <button
                                         type="button"
                                         onClick={() => addPoint(index, subIndex)}

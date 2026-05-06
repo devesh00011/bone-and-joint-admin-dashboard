@@ -17,8 +17,8 @@ export default function AddServices({ editId, setEditId, setActiveTab }) {
     const formFields = [
         { name: "service_name", label: "Service Name", type: "text" },
         { name: "service_slug", label: "Slug", type: "text" },
-        { name: "short_description", label: "Short Description", type: "text" },
-        { name: "full_details", label: "Full Details", type: "text" },
+        { name: "short_description", label: "Short Description", type: "textarea" },
+        { name: "full_details", label: "Full Details", type: "textarea" },
         { name: "meta_title", label: "Meta Title", type: "text", color: 'text-red-500' },
         { name: "meta_description", label: "Meta Description", type: "text", color: 'text-red-500' },
         { name: "service_image", label: "Service Image", type: "file" },
